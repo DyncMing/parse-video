@@ -24,3 +24,5 @@ node_modules
 package.json
 package-lock.json
 tmp/
+/bin/parse_video
+/server.log

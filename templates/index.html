@@ -2855,7 +2855,16 @@ function setValue() {
 
     xmlhttp.open("GET", "/video/share/url/parse?url=" + encodeURIComponent(v), false);
     xmlhttp.send();
-    var jsonObj = JSON.parse(xmlhttp.responseText);
+    var jsonObj;
+    try {
+        jsonObj = JSON.parse(xmlhttp.responseText);
+    } catch (e) {
+        console.error('Failed to parse JSON response:', e);
+        // Show raw response to help with debugging when server returns non-JSON (e.g. another service)
+        showNotification('解析失败: 服务器返回非JSON响应，详见控制台');
+        console.error('Raw response:', xmlhttp.responseText);
+        return;
+    }
     console.log(jsonObj);
 
     if (jsonObj.code == 200) {
