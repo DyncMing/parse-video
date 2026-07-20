@@ -27,3 +27,6 @@ tmp/
 /bin/parse_video
 /server.log
 /.codex/
+.worktrees/
+# Visual Companion mockups
+.superpowers/

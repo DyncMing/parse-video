@@ -1,47 +1,16 @@
    * [支持平台](#支持平台)
    * [安装](#安装)
+   * [命令行使用](#命令行使用)
    * [Docker](#docker)
    * [依赖模块](#依赖模块)
 
-Golang短视频去水印, 视频目前支持20个平台, 图集目前支持4个平台, 欢迎各位Star。
+Golang短视频去水印, 视频目前支持22个平台, 图集目前支持4个平台, 欢迎各位Star。
 > ps: 使用时, 请尽量使用app分享链接, 电脑网页版未做测试.
 
 # 其他语言版本
 - [Python版本](https://github.com/wujunwei928/parse-video-py)
 
 ---
-
-<div align="center">
-
-##  🚀 GLM Coding 限时优惠！性能强劲 量大管饱
-
-### 🎁 智谱 GLM Coding 超值订阅，邀你一起"薅羊毛"！
-
-**本项目前端多套主体样式和后端逻辑均有用到GLM辅助开发, 绝对性能够用, 又量大管饱.**
-
-[立即开拼，享限时惊喜价, 首购低至4折！](https://www.bigmodel.cn/glm-coding?ic=KUS7WQB5UI)
-
-<img src="resources/BigmodelPoster.png" alt="拼好模活动海报" width="300">
-
----
-
-</div>
-
-# MCP 支持
-
-本项目现已支持 [MCP (Model Context Protocol)](https://modelcontextprotocol.io/)，提供标准化的工具接口供AI助手调用。
-
-## MCP 功能特性
-
-- **多传输模式**: 支持 stdio 和 SSE 两种传输协议
-- **混合运行**: 可同时运行 HTTP API 和 MCP 服务器
-- **完整工具集**: 提供5个核心视频解析工具
-- **平台资源**: 提供支持的平台信息资源
-
-## MCP 使用文档
-
-- [MCP 使用指南](./MCP_USAGE.md) - 详细的MCP配置和使用说明
-- [MCP SSE 使用指南](./MCP_SSE_USAGE.md) - SSE传输模式的详细说明
 
 # 支持平台
 ## 图集
@@ -82,7 +51,10 @@ Golang短视频去水印, 视频目前支持20个平台, 图集目前支持4个�
 | 好看视频     | ✔  |
 | 虎牙       | ✔  |
 | AcFun    | ✔  |
+| 央视网     | ✔  |
 | 哔哩哔哩     | ✔  |
+| 腾讯视频     | ✔  |
+| 搜狐视频     | ✔  |
 
 # 安装
 ```go
@@ -95,17 +67,98 @@ res2, _ := parser.ParseVideoId(parser.SourceDouYin, "视频id")
 fmt.Printf("%#v", res2)
 ```
 
-# 本地运行
-```bash
-go run main.go
-```
+# 命令行使用
 
-开启basic auth认证, 设置 PARSE_VIDEO_USERNAME， PARSE_VIDEO_PASSWORD 环境变量，不设置不开启，默认不开启
+编译安装后，可通过 `parse-video` 命令使用，开发阶段可用 `go run main.go` 代替。
+
+## 子命令
+
+### `serve` - 启动 HTTP 解析服务（默认命令）
+
 ```bash
+# 默认监听 8080 端口
+go run main.go
+
+# 自定义端口
+go run main.go serve --port 9090
+
+# 开启 basic auth 认证
 export PARSE_VIDEO_USERNAME=basic_auth_username
 export PARSE_VIDEO_PASSWORD=basic_auth_password
-go run main.go
+go run main.go serve
 ```
+
+> 不带子命令时默认执行 `serve`，`--port` / `--version` 等全局选项可直接使用。
+
+### `parse` - 解析视频分享链接
+
+```bash
+# 解析单个链接
+go run main.go parse "https://v.douyin.com/xxxxx"
+
+# 也可直接传入包含链接的分享文案
+go run main.go parse "7.87 Pjm:/ 复制打开抖音 https://v.douyin.com/xxxxx"
+
+# 批量解析（传入多个链接）
+go run main.go parse "链接1" "链接2" "链接3"
+
+# 从文件读取链接（每行一个）
+go run main.go parse --file links.txt
+
+# 从标准输入读取
+echo "https://v.douyin.com/xxxxx" | go run main.go parse -f -
+
+# JSON 格式输出
+go run main.go parse --format json "分享链接"
+
+# 解析并下载媒体文件到当前目录
+go run main.go parse --download "分享链接"
+
+# 下载到指定目录
+go run main.go parse -d -o ./downloads "分享链接"
+```
+
+### `id` - 根据视频 ID 解析
+
+```bash
+# 通过平台 + 视频 ID 解析
+go run main.go id --source douyin "视频ID"
+
+# JSON 格式输出
+go run main.go id --source douyin --format json "视频ID"
+
+# 解析并下载
+go run main.go id --source douyin -d "视频ID"
+```
+
+> `--source` 为必填参数，可用值可通过解析失败时的错误提示查看。
+
+### `version` - 查看版本
+
+```bash
+go run main.go version
+```
+
+## 全局选项
+
+| 选项 | 说明 |
+|------|------|
+| `--port, -p` | 服务监听端口（默认 `8080`，serve 命令） |
+| `--version` | 显示版本信息 |
+
+## 解析命令通用选项（parse / id）
+
+| 选项 | 说明 |
+|------|------|
+| `--format` | 输出格式：`text`（默认）、`json` |
+| `--download, -d` | 下载解析到的媒体文件（视频、图集、封面、音乐） |
+| `--output-dir, -o` | 下载文件保存目录（默认 `.`，即当前目录） |
+
+## parse 独有选项
+
+| 选项 | 说明 |
+|------|------|
+| `--file, -f` | 从文件读取链接（每行一个，`-` 代表 stdin） |
 
 
 # Docker
@@ -119,10 +172,24 @@ docker pull wujunwei928/parse-video
 docker run -d -p 8080:8080 wujunwei928/parse-video
 ```
 
+自定义端口运行
+```bash
+docker run -d -p 9090:9090 wujunwei928/parse-video -port 9090
+```
+
 运行docker容器，开启basic auth认证
 ```bash
 docker run -d -p 8080:8080 -e PARSE_VIDEO_USERNAME=basic_auth_username -e PARSE_VIDEO_PASSWORD=basic_auth_password wujunwei928/parse-video
  ```
+
+设置 HTTP 代理（所有解析请求通过代理发送）
+```bash
+# 无认证代理
+docker run -d -p 8080:8080 -e PARSE_VIDEO_PROXY=http://proxy.example.com:端口 wujunwei928/parse-video
+
+# 有认证代理
+docker run -d -p 8080:8080 -e PARSE_VIDEO_PROXY=http://user:pass@proxy.example.com:端口 wujunwei928/parse-video
+```
 
 查看前端页面  
 访问: http://127.0.0.1:8080/  
@@ -167,12 +234,11 @@ curl 'http://127.0.0.1:8080/video/share/url/parse?url=视频分享链接' | jq
 | [github.com/go-resty/resty/v2](https://github.com/go-resty/resty/v2)     | HTTP 和 REST 客户端  |
 | [github.com/tidwall/gjson](https://github.com/tidwall/gjson)             | 使用一行代码获取JSON的值   |
 | [github.com/PuerkitoBio/goquery](https://github.com/PuerkitoBio/goquery) | 类jQuery语法解析html页面 |
-| [github.com/mark3labs/mcp-go](https://github.com/mark3labs/mcp-go)       | MCP (Model Context Protocol) 实现 |
+
 
 ```bash
 go get github.com/gin-gonic/gin
 go get github.com/go-resty/resty/v2
 go get github.com/tidwall/gjson
 go get github.com/PuerkitoBio/goquery
-go get github.com/mark3labs/mcp-go
 ```
