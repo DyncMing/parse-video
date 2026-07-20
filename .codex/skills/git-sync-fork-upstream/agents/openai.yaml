@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Sync Fork Upstream"
+  short_description: "Synchronize one or all Git fork branches with upstream."
+  default_prompt: "Use git-sync-fork-upstream to safely synchronize one branch or all matching branches of this fork from its configured upstream repository on Windows, Linux, or macOS. Treat upstream as read-only; push only to origin when requested."
