@@ -26,3 +26,4 @@ package-lock.json
 tmp/
 /bin/parse_video
 /server.log
+/.codex/
