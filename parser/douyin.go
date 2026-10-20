@@ -66,12 +66,10 @@ func (d douYin) parseVideoID(videoId string) (*VideoParseInfo, error) {
 	if !isNote {
 		re := regexp.MustCompile(`window._ROUTER_DATA\s*=\s*(.*?)</script>`)
 		findRes := re.FindSubmatch(resBody)
-		if len(findRes) < 2 {
-			return nil, errors.New("parse video json info from html fail")
+		if len(findRes) >= 2 {
+			jsonBytes = bytes.TrimSpace(findRes[1])
+			data = gjson.GetBytes(jsonBytes, "loaderData.video_(id)/page.videoInfoRes.item_list.0")
 		}
-
-		jsonBytes = bytes.TrimSpace(findRes[1])
-		data = gjson.GetBytes(jsonBytes, "loaderData.video_(id)/page.videoInfoRes.item_list.0")
 	}
 
 	if !data.Exists() {
@@ -79,12 +77,21 @@ func (d douYin) parseVideoID(videoId string) (*VideoParseInfo, error) {
 			jsonBytes,
 			fmt.Sprintf(`loaderData.video_(id)/page.videoInfoRes.filter_list.#(aweme_id=="%s")`, videoId),
 		)
+		if filterObj.Exists() {
+			return nil, fmt.Errorf(
+				"get video info fail: %s - %s",
+				filterObj.Get("filter_reason"),
+				filterObj.Get("detail_msg"),
+			)
+		}
 
-		return nil, fmt.Errorf(
-			"get video info fail: %s - %s",
-			filterObj.Get("filter_reason"),
-			filterObj.Get("detail_msg"),
-		)
+		data, err = d.fetchNativeVideoDetail(client, videoId)
+		if err != nil {
+			return nil, fmt.Errorf("get native douyin video detail: %w", err)
+		}
+		// Detail API covers both normal videos and image posts. The common
+		// result mapping below determines the actual media type from images.
+		isNote = false
 	}
 
 	// 获取图集图片地址
